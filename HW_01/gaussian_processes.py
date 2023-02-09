@@ -125,7 +125,29 @@ def simulate_gp(
     #  Use np.linalg.svd
     #
 
-    <YOUR CODE HERE>
+    # Gaussian processes definitions
+    mean_vector = mean_fn(t) # Shape: N x 1
+    # Sources: 
+    # https://numpy.org/doc/stable/reference/generated/numpy.meshgrid.html
+    # https://interactivechaos.com/es/manual/tutorial-de-numpy/la-funcion-meshgrid
+    T_1, T_2 = np.meshgrid(t, t, 
+                             indexing='ij' # matrix indexing
+                            )
+    kernel_matrix = kernel_fn(T_1, T_2)# N x N 
+    # we are going to carry Cholesky decomposition K(t,t) = LL^t
+    # To compute L: 
+    # Using svd decomposition: K = u s v^t
+    # Since K is symmetric then u = v then K = (u sqrt(s))(u sqrt(s))^t
+    # So L = u sqrt(s)
+    # Source: https://numpy.org/doc/stable/reference/generated/numpy.linalg.svd.html
+
+    u, s, _ = np.linalg.svd(kernel_matrix)
+    S = np.diag(s)
+    L = u @ np.sqrt(S)
+
+    # Simulation X(t) = m(t) + LZ with Z follows a N(0, Id_n)
+    Z = np.random.randn(M, len(t))
+    X = mean_vector + Z @ L
 
     return X, mean_vector, kernel_matrix
 
@@ -210,9 +232,9 @@ def simulate_conditional_gp(
     # NOTE Use 'multivariate_normal' from numpy with "'method = 'svd'".
     # 'svd' is slower, but numerically more robust than 'cholesky'
 
-    <YOUR CODE HERE>
-
-    return X, mean_vector, kernel_matrix
+    #<YOUR CODE HERE>
+    return
+    #return X, mean_vector, kernel_matrix
 
 
 def gp_regression(
@@ -269,9 +291,9 @@ def gp_regression(
     # NOTE use 'np.linalg.solve' instead of inverting the matrix.
     # This procedure is numerically more robust.
 
-    <YOUR CODE HERE>
-
-    return prediction_mean, prediction_variance
+    #<YOUR CODE HERE>
+    return 0
+    #return prediction_mean, prediction_variance
 
 
 if __name__ == "__main__":
