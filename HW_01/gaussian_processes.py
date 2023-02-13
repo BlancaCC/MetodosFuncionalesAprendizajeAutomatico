@@ -152,6 +152,18 @@ def simulate_gp(
     return X, mean_vector, kernel_matrix
 
 
+def build_kernel_matrix(
+    t1: np.ndarray,
+    t2: np.ndarray,
+    kernel_fn: Callable[[np.ndarray], np.ndarray]
+) -> np.nadarray:
+
+    T_1, T_2 = np.meshgrid(t1, t2, indexing='ij')
+
+    return kernel_fn(T_1, T_2)
+
+
+
 def simulate_conditional_gp(
     t: np.ndarray,
     t_obs: np.ndarray,
@@ -234,21 +246,10 @@ def simulate_conditional_gp(
 
     #<YOUR CODE HERE>
 
-    T_1, T_2 = np.meshgrid(t, t, indexing='ij')
-    T_1_obs, T_2_obs = np.meshgrid(t_obs, t_obs, indexing='ij')
-    T_1_t_obs, T_2_t_obs = np.meshgrid(t, t_obs, indexing='ij')
-    T_1_obs_t, T_2_obs_t = np.meshgrid(t_obs, t, indexing='ij')
-    
-    kernel_matrix_t = kernel_fn(T_1, T_2)
-    kernel_matrix_obs = kernel_fn(T_1_obs, T_2_obs)
-    kernel_matrix_t_obs = kernel_fn(T_1_t_obs, T_2_t_obs)
-    kernel_matrix_obs_t = kernel_fn(T_1_obs_t, T_2_obs_t)
+    inverse_kernel = np.linalg.inv(build_kernel_matrix(t_obs, t_obs, kernel_fn))
 
-
-    inverse_kernel = np.linalg.inv(kernel_matrix_obs)
-
-    mean_vector = mean_fn(t) + np.dot(np.dot(kernel_matrix_t_obs,inverse_kernel), x_obs - mean_fn(t_obs))
-    kernel_matrix = kernel_matrix_t - np.dot(np.dot(kernel_matrix_t_obs,inverse_kernel), kernel_matrix_obs_t) 
+    mean_vector = mean_fn(t) + np.dot(np.dot(build_kernel_matrix(t, t_obs, kernel_fn), inverse_kernel), x_obs - mean_fn(t_obs))
+    kernel_matrix = build_kernel_matrix(t, t, kernel_fn) - np.dot(np.dot(build_kernel_matrix(t, t_obs, kernel_fn),inverse_kernel), build_kernel_matrix(t_obs, t, kernel_fn)) 
 
     print(np.array(mean_vector))
     print(np.array(kernel_matrix))
