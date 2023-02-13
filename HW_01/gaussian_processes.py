@@ -233,8 +233,29 @@ def simulate_conditional_gp(
     # 'svd' is slower, but numerically more robust than 'cholesky'
 
     #<YOUR CODE HERE>
-    return
-    #return X, mean_vector, kernel_matrix
+
+    T_1, T_2 = np.meshgrid(t, t, indexing='ij')
+    T_1_obs, T_2_obs = np.meshgrid(t_obs, t_obs, indexing='ij')
+    T_1_t_obs, T_2_t_obs = np.meshgrid(t, t_obs, indexing='ij')
+    T_1_obs_t, T_2_obs_t = np.meshgrid(t_obs, t, indexing='ij')
+    
+    kernel_matrix_t = kernel_fn(T_1, T_2)
+    kernel_matrix_obs = kernel_fn(T_1_obs, T_2_obs)
+    kernel_matrix_t_obs = kernel_fn(T_1_t_obs, T_2_t_obs)
+    kernel_matrix_obs_t = kernel_fn(T_1_obs_t, T_2_obs_t)
+
+
+    inverse_kernel = np.linalg.inv(kernel_matrix_obs)
+
+    mean_vector = mean_fn(t) + np.dot(np.dot(kernel_matrix_t_obs,inverse_kernel), x_obs - mean_fn(t_obs))
+    kernel_matrix = kernel_matrix_t - np.dot(np.dot(kernel_matrix_t_obs,inverse_kernel), kernel_matrix_obs_t) 
+
+    print(np.array(mean_vector))
+    print(np.array(kernel_matrix))
+
+    X = np.random.default_rng().multivariate_normal(mean_vector, kernel_matrix, M,  method = 'svd')
+
+    return X, mean_vector, kernel_matrix
 
 
 def gp_regression(
