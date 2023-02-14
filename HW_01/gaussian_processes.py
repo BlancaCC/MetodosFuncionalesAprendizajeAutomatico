@@ -142,8 +142,8 @@ def simulate_gp(
     # Source: https://numpy.org/doc/stable/reference/generated/numpy.linalg.svd.html
 
     u, s, _ = np.linalg.svd(kernel_matrix)
-    S = np.diag(s)
-    L = u @ np.sqrt(S)
+    S = np.diag(s) # N x N
+    L = np.sqrt(S) @ u.T
 
     # Simulation X(t) = m(t) + LZ with Z follows a N(0, Id_n)
     Z = np.random.randn(M, len(t))
