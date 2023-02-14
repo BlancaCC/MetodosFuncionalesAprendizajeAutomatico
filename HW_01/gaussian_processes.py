@@ -157,10 +157,51 @@ def build_kernel_matrix(
     t2: np.ndarray,
     kernel_fn: Callable[[np.ndarray], np.ndarray]
 ) -> np.nadarray:
+    """Build kernel matrix 
+
+    Parameters
+    ----------
+
+    t1 :
+        Array of times
+
+    t2 :
+        Array of times
+
+    kernel_fn :
+        Covariance functions of the Gaussian process.
+
+
+    Returns
+    -------
+
+    kernel_matrix:
+        Kernel matrix as an np.ndarray with len(t1) rows and len(t2) columns.
+
+    Example
+    -------
+
+    >>> import numpy as np
+    >>> def BB_kernel(s,t):
+    ...     return np.minimum(s,t) - s * t
+    >>> M, N  = (300, 1000)
+    >>> t0, t1 = (0.0, 1.0)
+    >>> t2, t3 = (0.0, 1.0)
+    >>> T0 = np.linspace(t0, t1, N)
+    >>> T1 = np.linspace(t2, t3, M)
+    >>> K = gp.build_kernel_matrix(
+            T0
+            T1
+    ...     BB_kernel,
+    ... )
+    >>> print(K)
+    
+    """
 
     T_1, T_2 = np.meshgrid(t1, t2, indexing='ij')
+    kernel_matrix = kernel_fn(T_1, T_2)
 
-    return kernel_fn(T_1, T_2)
+    return kernel_matrix
 
 
 
@@ -313,9 +354,16 @@ def gp_regression(
     # NOTE use 'np.linalg.solve' instead of inverting the matrix.
     # This procedure is numerically more robust.
 
+    noise_matrix = kernel_fn(X, X) + sigma2_noise * np.identity(y.size)
+    inverse_matrix = np.linalg.solve(noise_matrix, np.identity(y.size))
+    inverse_matrix_y = np.linalg.solve(noise_matrix, y)
+
+    prediction_mean = kernel_fn(X_test, X) @ inverse_matrix_y 
+    prediction_variance = kernel_fn(X_test, X_test) - kernel_fn(X_test, X) @ inverse_matrix @ kernel_fn(X, X_test)
+
     #<YOUR CODE HERE>
-    return 0
-    #return prediction_mean, prediction_variance
+    #return 0
+    return prediction_mean, prediction_variance
 
 
 if __name__ == "__main__":
