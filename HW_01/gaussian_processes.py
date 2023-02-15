@@ -289,11 +289,8 @@ def simulate_conditional_gp(
 
     inverse_kernel = np.linalg.inv(build_kernel_matrix(t_obs, t_obs, kernel_fn))
 
-    mean_vector = mean_fn(t) + np.dot(np.dot(build_kernel_matrix(t, t_obs, kernel_fn), inverse_kernel), x_obs - mean_fn(t_obs))
-    kernel_matrix = build_kernel_matrix(t, t, kernel_fn) - np.dot(np.dot(build_kernel_matrix(t, t_obs, kernel_fn),inverse_kernel), build_kernel_matrix(t_obs, t, kernel_fn)) 
-
-    print(np.array(mean_vector))
-    print(np.array(kernel_matrix))
+    mean_vector = mean_fn(t) + build_kernel_matrix(t, t_obs, kernel_fn) @ inverse_kernel @ ( x_obs - mean_fn(t_obs))
+    kernel_matrix = build_kernel_matrix(t, t, kernel_fn) - build_kernel_matrix(t, t_obs, kernel_fn) @ inverse_kernel @ build_kernel_matrix(t_obs, t, kernel_fn)
 
     X = np.random.default_rng().multivariate_normal(mean_vector, kernel_matrix, M,  method = 'svd')
 
