@@ -134,7 +134,7 @@ def simulate_gp(
                              indexing='ij' # matrix indexing
                             )
     kernel_matrix = kernel_fn(T_1, T_2)# N x N 
-    # we are going to carry Cholesky decomposition K(t,t) = LL^t
+    # We are going to carry Cholesky decomposition K(t,t) = LL^t
     # To compute L: 
     # Using svd decomposition: K = u s v^t
     # Since K is symmetric then u = v then K = (u sqrt(s))(u sqrt(s))^t
@@ -213,7 +213,7 @@ def simulate_conditional_gp(
     kernel_fn: Callable[[np.ndarray], np.ndarray],
     M: int,
 ) -> np.ndarray:
-    """Simulate a Gaussian process conditined to observed values.
+    """Simulate a Gaussian process conditioned to observed values.
 
         X(t) ~ GP(mean_fn,kernel_fn)
 
@@ -285,16 +285,16 @@ def simulate_conditional_gp(
     # NOTE Use 'multivariate_normal' from numpy with "'method = 'svd'".
     # 'svd' is slower, but numerically more robust than 'cholesky'
 
-    #First we obtein the inverse matrix of kernel k(t_obs,t_obs)
+    # First we obtain the inverse matrix of kernel k(t_obs,t_obs)
     inverse_kernel = np.linalg.inv(build_kernel_matrix(t_obs, t_obs, kernel_fn))
 
-    #Next, using the function 'build_kernel_matrix' we defined before, mean_vector and kernel_matrix are calculated using:
+    # Next, using the function 'build_kernel_matrix' we defined before, mean_vector and kernel_matrix are calculated using:
     # mean = m(t) + k(t, t_obs) k(t_obs, t_obs)^(-1) (X_obs - m(t_obs))
     # kernel = k(t, t) - k(t, t_obs) k(t_obs, t_obs)^(-1) k(t_obs, t)
     mean_vector = mean_fn(t) + build_kernel_matrix(t, t_obs, kernel_fn) @ inverse_kernel @ ( x_obs - mean_fn(t_obs))
     kernel_matrix = build_kernel_matrix(t, t, kernel_fn) - build_kernel_matrix(t, t_obs, kernel_fn) @ inverse_kernel @ build_kernel_matrix(t_obs, t, kernel_fn)
 
-    #Finally the simulation, X, is obtained using 'multivariate_normal' from numpy with method 'svd'
+    # Finally the simulation, X, is obtained using 'multivariate_normal' from numpy with method 'svd'
     X = np.random.default_rng().multivariate_normal(mean_vector, kernel_matrix, M,  method = 'svd')
 
     return X, mean_vector, kernel_matrix
@@ -354,18 +354,18 @@ def gp_regression(
     # NOTE use 'np.linalg.solve' instead of inverting the matrix.
     # This procedure is numerically more robust.
 
-    #Firtable, let's get the matrix k(X,X) + sigma^2 * I
+    # Firstable, let's get the matrix k(X,X) + sigma^2 * I
     noise_matrix = kernel_fn(X, X) + sigma2_noise * np.identity(y.size)
 
-    #Secondly, we inverse this matrix 
+    # Secondly, we inverse this matrix 
     inverse_matrix = np.linalg.solve(noise_matrix, np.identity(y.size))
 
-    #Next, we store the product inverse_matrix @ y
+    # Next, we store the product inverse_matrix @ y
     inverse_matrix_y = np.linalg.solve(noise_matrix, y)
 
-    #Finally prediction_mean and prediction_variance are calculated following the equation
-    #mean = k(X_test, X) (k(X, X) + sigma^2 * I)^(-1) y
-    #variance = k(X_test, X_test) - k(X_test, X) (k(X, X) + sigma^2 * I)^(-1) k(X, X_test)
+    # Finally prediction_mean and prediction_variance are calculated following the equation
+    # mean = k(X_test, X) (k(X, X) + sigma^2 * I)^(-1) y
+    # variance = k(X_test, X_test) - k(X_test, X) (k(X, X) + sigma^2 * I)^(-1) k(X, X_test)
     prediction_mean = kernel_fn(X_test, X) @ inverse_matrix_y 
     prediction_variance = kernel_fn(X_test, X_test) - kernel_fn(X_test, X) @ inverse_matrix @ kernel_fn(X, X_test)
 
