@@ -212,11 +212,19 @@ class NystroemFeaturesSampler():
     def approximate_kernel_matrix(
         self,
         X: np.ndarray,
-        n_features_sampled: int
+        n_features_sampled: int,
+        X_prime: Optional[np.ndarray] = None
     ) -> np.ndarray:
         """Approximate the kernel matrix using Nystroem features."""
 
         # NOTE <YOUR CODE HERE>.
+
+        trasform_X = self.fit_transform(n_features_sampled, X)
+        trasform_X_prime = self.fit_transform(n_features_sampled, X, X_prime)
+        
+        kernel_aproximation = trasform_X.T @ trasform_X_prime
+
+        return kernel_aproximation 
 
 
     def fit_transform(
@@ -236,6 +244,9 @@ class NystroemFeaturesSampler():
         """Compute Nystroem features with precomputed quantities."""
 
         # NOTE <YOUR CODE HERE>.
+
+        kernel_prime = self.kernel(self._X_reduced, X_prime)
+        X_prime_nystroem = self._sqrtm_pinv_reduced_kernel_matrix @ kernel_prime
 
         return X_prime_nystroem
 
