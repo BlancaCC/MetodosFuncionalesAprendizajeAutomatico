@@ -2,6 +2,7 @@ from typing import Callable, Tuple
 
 import numpy as np
 from scipy.spatial import distance
+from scipy import linalg
 
 
 def linear_kernel(
@@ -75,10 +76,8 @@ def kernel_pca(
         Data matrix
     X_test:
         data matrix
-    A:
-        output variance
-    ls:
-        kernel lengthscale
+    kernel: 
+        function
 
     Returns
     -------
@@ -97,6 +96,56 @@ def kernel_pca(
 
     """
 
-    # NOTE <YOUR CODE HERE>.
+    # In order to compute kernel PCA the following 6 steps are needed: 
+
+    # 1. Build the Gram matrix K for the set of observations X 
+    gram_matrix = kernel(X,X) # For n = size(X) then K is a n x n matrix 
+
+    # 2. Compute the Gram matrix of the centered kernel
+    k_len, _ =  X.shape 
+    ones_matrix = np.ones((k_len, k_len))
+    tilda_K = ( gram_matrix
+                - 1/k_len * gram_matrix @ ones_matrix
+                -  1/k_len * ones_matrix @ gram_matrix
+                + 1 /(k_len**2) * ones_matrix @ gram_matrix @ ones_matrix
+    )
+    # 3.1 Find the eigenvalues: 
+    # Since tilda_K is symmetric and positive semi-definite we are going to use 
+    # eigh function from: https://numpy.org/doc/stable/reference/generated/numpy.linalg.eigh.html
+    # The advantage is that it gives sorted the eigenvalues
+    # All are going to be real numbers and we are going to take non zero vectors. 
+    eigenvalues, normalized_eigenvector = linalg.eigh(tilda_K)
+    eigenvalues_eigenvector = [(v,np.array(u)) 
+               for v,u in  zip(eigenvalues,zip(*normalized_eigenvector)) 
+               if v > 10**(-5) # zero tolerance
+            ]
+    eigenvalues_eigenvector = eigenvalues_eigenvector[::-1] # more relevan first
+    
+    # 3.2 Normalization condition 
+    # eigenvectors should verify: alpha.T alpha = 1/lambda 
+    # (where alpha it the eugenvector of  lambda)
+    alpha_eigenvecs = [u / np.sqrt(v) for v,u in eigenvalues_eigenvector]
+    lambda_eigenvals = list(map(lambda x:x[0],eigenvalues_eigenvector))
+
+    # 4. Compute the matrix the test centered gram matrix 
+    test_len, _ = X_test.shape
+    test_gram_matrix = kernel(X_test, X)
+    # centered
+    tilda_ones = np.ones((test_len, k_len))
+    test_centered_gram_matrix = (
+        # TODO
+    )
+
 
     return X_test_hat, lambda_eigenvals, alpha_eigenvecs
+
+
+if __name__ == '__main__':
+    X = np.array([
+        [1,0,0],
+        [0,2,0],
+        [0,0,3]
+    ])
+
+    kernel = linear_kernel
+    kernel_pca(X, X, kernel)
