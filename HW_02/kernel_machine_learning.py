@@ -68,6 +68,7 @@ def kernel_pca(
     X: np.ndarray,
     X_test: np.ndarray,
     kernel: Callable,
+    significance : float = 10**(-10)
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
     Parameters
@@ -78,7 +79,8 @@ def kernel_pca(
         data matrix
     kernel: 
         function
-
+    significance:
+        Minimum value of the eigenvalue to not be ignored
     Returns
     -------
     X_test_hat:
@@ -98,7 +100,7 @@ def kernel_pca(
 
     """
 
-    # In order to compute kernel PCA the following 6 steps are needed: 
+    # In order to compute kernel PCA the following 5 steps are needed: 
 
     # 1. Build the Gram matrix K for the set of observations X 
     gram_matrix = kernel(X,X) # For n = size(X) then K is a n x n matrix 
@@ -119,9 +121,9 @@ def kernel_pca(
     eigenvalues, normalized_eigenvector = linalg.eigh(tilda_K)
     eigenvalues_eigenvector = [(v,np.array(u)) 
                for v,u in  zip(eigenvalues,zip(*normalized_eigenvector)) 
-               if v > 10**(-5) # zero tolerance
+               if v > 10**(-10) # zero tolerance
             ]
-    eigenvalues_eigenvector = eigenvalues_eigenvector[::-1] # more relevan first
+    eigenvalues_eigenvector = eigenvalues_eigenvector[::-1] # more relevant first
     
     # 3.2 Normalization condition 
     # eigenvectors should verify: alpha.T alpha = 1/lambda 
@@ -149,14 +151,3 @@ def kernel_pca(
 
     return X_test_hat, lambda_eigenvals, alpha_eigenvecs
 
-
-if __name__ == '__main__':
-    X = np.array([
-        [1,0,0],
-        [0,2,0],
-        [0,0,3]
-    ])
-
-    kernel = linear_kernel
-    test, l, v = kernel_pca(X, X, kernel)
-    print(test, l, v)
