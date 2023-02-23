@@ -84,10 +84,12 @@ def kernel_pca(
     X_test_hat:
         Projection of X_test on the principal components
     lambda_eigenvals:
-        Eigenvalues of the centered kernel
+        Eigenvalues of the centered kernel. 
+        Each row is a lambda eigenvector. 
     alpha_eigenvecs:
         Principal components. These are the eigenvectors
-        of the centered kernel with the RKHS normalization
+        of the centered kernel with the RKHS normalization.
+        Each row is a eigenvectors
 
     Notes
     -------
@@ -124,17 +126,25 @@ def kernel_pca(
     # 3.2 Normalization condition 
     # eigenvectors should verify: alpha.T alpha = 1/lambda 
     # (where alpha it the eugenvector of  lambda)
-    alpha_eigenvecs = [u / np.sqrt(v) for v,u in eigenvalues_eigenvector]
-    lambda_eigenvals = list(map(lambda x:x[0],eigenvalues_eigenvector))
+    alpha_eigenvecs = np.array([u / np.sqrt(v) for v,u in eigenvalues_eigenvector])
+    lambda_eigenvals = np.array(list(map(lambda x:x[0],eigenvalues_eigenvector)))
 
-    # 4. Compute the matrix the test centered gram matrix 
+    # 4. Compute the test centered gram matrix 
     test_len, _ = X_test.shape
     test_gram_matrix = kernel(X_test, X)
     # centered
     tilda_ones = np.ones((test_len, k_len))
+    # As we see the size coherence remains correctly: 
     test_centered_gram_matrix = (
-        # TODO
+        test_gram_matrix # L x N
+        - 1 / k_len * test_gram_matrix @ ones_matrix # (L x N) @ (N x N) = L x N
+        - 1 / k_len * tilda_ones @ gram_matrix # (L x N) @ (N x N) = L x N
+        # (L x N) @ (N x N) @ (N x N) = L x N
+        - 1 / (k_len**2)* tilda_ones @ gram_matrix @ ones_matrix
     )
+
+    # 5. Compute the output projections of the test data 
+    X_test_hat = test_centered_gram_matrix @ alpha_eigenvecs.T 
 
 
     return X_test_hat, lambda_eigenvals, alpha_eigenvecs
@@ -148,4 +158,5 @@ if __name__ == '__main__':
     ])
 
     kernel = linear_kernel
-    kernel_pca(X, X, kernel)
+    test, l, v = kernel_pca(X, X, kernel)
+    print(test, l, v)
