@@ -219,6 +219,9 @@ class NystroemFeaturesSampler():
 
         # NOTE <YOUR CODE HERE>.
 
+        if X_prime is None:
+            X_prime = X
+
         trasform_X = self.fit_transform(n_features_sampled, X)
         trasform_X_prime = self.fit_transform(n_features_sampled, X, X_prime)
         
@@ -245,10 +248,10 @@ class NystroemFeaturesSampler():
 
         # NOTE <YOUR CODE HERE>.
 
-        kernel_prime = self.kernel(self._X_reduced, X_prime)
+        kernel_prime = self._kernel(self._X_reduced, X_prime)
         X_prime_nystroem = self._sqrtm_pinv_reduced_kernel_matrix @ kernel_prime
 
-        return X_prime_nystroem
+        return X_prime_nystroem.T
 
 
 def demo_kernel_approximation_features(
@@ -271,6 +274,11 @@ def demo_kernel_approximation_features(
 
     for n, ax in zip(n_features, axes[1:]):
         print('# of features = ', n)
+
+        #original
+        #X_features = features_sampler.fit_transform(n, X)
+        #kernel_matrix_approx = X_features @ X_features.T
+        #kernel_matrix_approx = features_sampler.approximate_kernel_matrix(X,n)
 
         X_features = features_sampler.fit_transform(n, X)
         kernel_matrix_approx = X_features @ X_features.T
