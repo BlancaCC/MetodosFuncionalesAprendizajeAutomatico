@@ -275,11 +275,6 @@ def demo_kernel_approximation_features(
     for n, ax in zip(n_features, axes[1:]):
         print('# of features = ', n)
 
-        #original
-        #X_features = features_sampler.fit_transform(n, X)
-        #kernel_matrix_approx = X_features @ X_features.T
-        #kernel_matrix_approx = features_sampler.approximate_kernel_matrix(X,n)
-
         X_features = features_sampler.fit_transform(n, X)
         kernel_matrix_approx = X_features @ X_features.T
 
@@ -299,6 +294,35 @@ def demo_kernel_approximation_features(
         ax.set_xticks([])
         ax.set_yticks([])
         plt.tight_layout()
+    plt.show()
+
+
+def plot_error(
+    X: np.ndarray,
+    kernel: Callable[[np.ndarray, np.ndarray], np.ndarray],
+    features_sampler: Union[RandomFeaturesSampler, NystroemFeaturesSampler]
+) -> None:
+    """Kernel approximation using random Fourier features (RFF)."""
+
+    n_features = np.arange(2, 500, 2)
+    mean_errors_list = []
+    max_errors_list = []
+    kernel_matrix = kernel(X, X)
+
+    for n in n_features:
+        X_features = features_sampler.fit_transform(n, X)
+        kernel_matrix_approx = X_features @ X_features.T
+
+        err_approx = kernel_matrix - kernel_matrix_approx
+        err_mean = np.mean(np.abs(err_approx))
+        err_max = np.max(np.abs(err_approx))
+        
+        mean_errors_list.append(err_mean)
+        max_errors_list.append(err_max)
+
+    plt.plot(n_features, max_errors_list, label = 'max error')
+    plt.plot(n_features, mean_errors_list, label = 'mean error')
+    plt.legend()
     plt.show()
 
 
