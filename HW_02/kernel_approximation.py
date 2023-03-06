@@ -300,11 +300,44 @@ def demo_kernel_approximation_features(
 def plot_error(
     X: np.ndarray,
     kernel: Callable[[np.ndarray, np.ndarray], np.ndarray],
-    features_sampler: Union[RandomFeaturesSampler, NystroemFeaturesSampler]
+    features_sampler: Union[RandomFeaturesSampler, NystroemFeaturesSampler],
+    n_features: int
 ) -> None:
-    """Kernel approximation using random Fourier features (RFF)."""
+    """Kernel approximation using random Fourier features (RFF).
+    
+    Parameters
+    ----------
+    X:
+        :math: Data matrix 
 
-    n_features = np.arange(2, 500, 2)
+    kernel_fn:
+        Kernel function.
+
+    features_sampler:
+        Instance of the random features object
+
+    n_features:
+        Max value for features
+
+    Returns
+    -------
+        None
+
+    Example
+    -------
+    >>> import numpy as np
+    >>> import matplotlib.pyplot as plt
+    >>> X, t = datasets.make_s_curve(n_instances, noise=0.1)
+    >>> X = X[np.argsort(t)]
+    >>> gamma = 1.0 / (2.0 * sigma**2)
+    >>> def kernel (X, Y, gamma):
+    ...     return rbf_kernel(X, Y, gamma)
+    >>> rbf_sampler = ka.RandomFeaturesSamplerRBF(sigma)
+    >>> plot_error(X, kernel, rbf_sampler, 1000)
+    
+    """
+
+    n_features = np.arange(10, n_features, 10)
     mean_errors_list = []
     max_errors_list = []
     kernel_matrix = kernel(X, X)
@@ -324,6 +357,12 @@ def plot_error(
     plt.plot(n_features, mean_errors_list, label = 'mean error')
     plt.legend()
     plt.show()
+
+    correlation_coef_mean = np.corrcoef(n_features,np.array(mean_errors_list))
+    correlation_coef_max = np.corrcoef(n_features,np.array(max_errors_list))
+
+    print(f'Correlation coefficient matrix for mean error: {correlation_coef_mean}')
+    print(f'Correlation coefficient matrix for max error: {correlation_coef_max}')
 
 
 if __name__ == '__main__':
